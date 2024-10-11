@@ -224,7 +224,7 @@ def main(rank,args):
                 })
                 progress_bar.update(1)
             
-            if rank == 0:
+            if local_rank == 0:
                     wandb.log({
                         "train_loss": loss.item(),
                         "learning_rate": optimizer.param_groups[0]['lr'],
@@ -246,6 +246,11 @@ def main(rank,args):
             print(f"Evaluation Loss: {eval_loss:.4f}")
             print(f"Perplexity: {eval_perplexity:.2f}")
             
+        if local_rank == 0:
+            wandb.log({
+                        "eval_loss": eval_loss.item(),
+                        "eval_perplexity":eval_perplexity.item()
+                        })
             # Save best model
             if eval_perplexity < best_perplexity:
                 best_perplexity = eval_perplexity
@@ -253,7 +258,7 @@ def main(rank,args):
                     'epoch': epoch,
                     'model_state_dict': model.module.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
-                    'loss': eval_loss,
+                    'eval_loss': eval_loss,
                     'perplexity': eval_perplexity,
                 }, 'best_model.pt')
                 print(f"New best model saved! Perplexity: {eval_perplexity:.2f}")
