@@ -81,16 +81,14 @@ class MinGRU_LM(nn.Module):
         return total_loss / len(self.layers), logits
 
 if __name__ == "__main__":
-    dim = 512  # Embedding dimension
-    num_tokens = 256  # Size of vocabulary
-    num_layers = 6  # Number of MinGRU layers
-    batch_size = 4  # Batch size
-    seq_length = 512  # Sequence length
+    dim = 512  
+    num_tokens = 256  
+    num_layers = 6  
+    batch_size = 4  
+    seq_length = 512 
 
-    # Create an instance of the model
     model = MinGRU_LM(dim, num_tokens, num_layers)
     count_parameters(model)
-    # Create a random input tensor of shape (batch_size, seq_length)
     inputs = torch.randint(0, num_tokens, (batch_size, seq_length))
 
     # Define optimizer
