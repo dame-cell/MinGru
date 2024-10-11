@@ -38,14 +38,13 @@ class MinGRU_Layers(nn.Module):
         self.norm = RMSNorm(dim)
         self.to_logits = nn.Linear(dim, num_tokens, bias=False)
 
-    def forward(self, x, is_first_layer=True, prev_hiddens=None):
+    def forward(self, inputs, labels=None, is_first_layer=True, prev_hiddens=None):
         if is_first_layer:
-            inputs, labels = x[:, :-1], x[:, 1:]
             x = self.emb(inputs)
         else:
-            labels = x.argmax(dim=-1)
-            x = self.emb(labels)  
-
+            # For subsequent layers, use the predicted tokens from previous layer
+            x = self.emb(inputs.argmax(dim=-1))
+        
         if exists(prev_hiddens):
             x = x[:, -1:]
 
@@ -61,7 +60,11 @@ class MinGRU_Layers(nn.Module):
         next_prev_hiddens.append(next_hidden)
         x = self.ff(x) + x
         logits = self.to_logits(self.norm(x))
-        loss = F.cross_entropy(logits.transpose(1, 2), labels)
+
+        if labels is not None:
+            loss = F.cross_entropy(logits.transpose(1, 2), labels)
+        else:
+            loss = None
 
         return loss, logits, next_prev_hiddens
 
@@ -70,14 +73,25 @@ class MinGRU_LM(nn.Module):
         super().__init__()
         self.layers = nn.ModuleList([MinGRU_Layers(dim, num_tokens) for _ in range(num_layers)])
 
-    def forward(self, x):
+    def forward(self, inputs, labels):
         total_loss = 0
         hidden_states = [None] * len(self.layers)
+        current_input = inputs
+
         for i, layer in enumerate(self.layers):
-            loss, logits, next_hiddens = layer(x, is_first_layer=(i == 0), prev_hiddens=hidden_states[i])
-            total_loss += loss
-            x = logits  # Use the logits as input for the next layer
+            loss, logits, next_hiddens = layer(
+                inputs=current_input,
+                labels=labels,
+                is_first_layer=(i == 0),
+                prev_hiddens=hidden_states[i]
+            )
+            
+            if loss is not None:
+                total_loss += loss
+                
+            current_input = logits  # Use the logits as input for the next layer
             hidden_states[i] = next_hiddens
+
         return total_loss / len(self.layers), logits
 
 if __name__ == "__main__":
@@ -89,29 +103,10 @@ if __name__ == "__main__":
 
     model = MinGRU_LM(dim, num_tokens, num_layers)
     count_parameters(model)
-    inputs = torch.randint(0, num_tokens, (batch_size, seq_length))
 
-    # Define optimizer
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+    batch_inputs = torch.randint(0, 256, (batch_size, seq_length))
+    batch_labels = torch.randint(0, 256, (batch_size, seq_length))
 
-    # Training loop
-    for epoch in range(50):
-        model.train()
-        optimizer.zero_grad()
-
-        loss, logits = model(inputs)
-        
-        loss.backward()
-        optimizer.step()
-
-        # Print epoch and loss
-        print(f"Epoch [{epoch+1}/{50}], Loss: {loss.item():.4f}")
-
-    print("Training completed!")
-    
-    # Final evaluation
-    model.eval()
-    with torch.no_grad():
-        final_loss, final_logits = model(inputs)
-    
-    print(f"Final Loss: {final_loss.item():.4f}")
+    loss, logits = model(batch_inputs, batch_labels)
+    print("Loss",loss)
+    print("logits",logits[0,0,:3])

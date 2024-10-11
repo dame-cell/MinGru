@@ -22,8 +22,8 @@ class MinGruDataset(Dataset):
         return torch.tensor(input_chunk), torch.tensor(target_chunk)
 
 
-train_data  = MinGruDataset(npz_file_path="/teamspace/studios/this_studio/MinGru/mingru/train.npz")
-test_data  = MinGruDataset(npz_file_path="/teamspace/studios/this_studio/MinGru/mingru/test.npz")
+train_data  = MinGruDataset(npz_file_path="train.npz")
+test_data  = MinGruDataset(npz_file_path="test.npz")
 
 train_dataloader = DataLoader(dataset=train_data,batch_size=4,shuffle=True)
 test_dataloader = DataLoader(dataset=test_data,batch_size=4,shuffle=True)
