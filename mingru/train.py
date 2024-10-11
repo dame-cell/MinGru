@@ -23,7 +23,7 @@ def parse_args():
     parser.add_argument('--num_layers', type=int, default=6, help="Number of layers to train the model")
     parser.add_argument('--path_to_train_data', type=str, required=True, help="Path to your saved train processed data")
     parser.add_argument('--path_to_test_data', type=str, required=True, help="Path to your saved test processed data")
-    parser.add_argument('--batch_size', type=int, default=84, help="Batch size for training")
+    parser.add_argument('--batch_size', type=int, default=64, help="Batch size for training")
     parser.add_argument('--lr', type=float, default=4e-3, help="Learning rate for training the model")
     parser.add_argument('--wd', type=float, default=1e-2, help="Weight decay for your optimizer")
     parser.add_argument('--epochs', type=int, default=40, help="Total number of epochs")
