@@ -125,7 +125,7 @@ def main(rank,args):
 
     wandb.login(key="04098c64a0b88d5f4ff90335b7f75613041420c6")
     if rank == 0:
-        wandb.init(project="gpt2-sample-fineweb-ddp", config=args, group=f"DDP_GPT2",)
+        wandb.init(project="mingru-ddp", config=args, group=f"DDP_MINGRU",)
 
 
     local_rank = dist.get_rank()
