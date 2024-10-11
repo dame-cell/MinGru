@@ -8,6 +8,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
 from accelerate.utils import tqdm
+import torch.multiprocessing as mp
 from mingru_lm import MinGRU_LM
 from utils import count_parameters, decode_tokens, tokenize_text
 from pytorch_utils import MinGruDataset
@@ -27,6 +28,7 @@ def parse_args():
     parser.add_argument('--wd', type=float, default=1e-2, help="Weight decay for your optimizer")
     parser.add_argument('--epochs', type=int, default=40, help="Total number of epochs")
     parser.add_argument('--save_epoch', type=int, default=10, help="How many epochs to save each run")
+    parser.add_argument('--world_size', type=int, default=2, help="Number of GPUs (DDP)")   
 
     return parser.parse_args()
 
@@ -112,12 +114,11 @@ def generate_text(model, start_text="Once upon a time", max_length=100, temperat
     return decode_tokens(generated_tokens)
 
 
-def main():
+def main(rank,args):
     # Initialize distributed training
-    setup()
+    setup(rank, args.world_size)
     
-    args = parse_args()  # Make sure to parse arguments here
-    
+
       # Set up device
     device = torch.device(f"cuda:{rank}")
 
@@ -265,9 +266,10 @@ def main():
                 print(f"Prompt: {prompt}\nGenerated: {generated}\n")
 
     progress_bar.close()
-    # Cleanup distributed environment
-    cleanup_distributed()
+    cleanup()
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    world_size = args.world_size
+    mp.spawn(main, args=(args,), nprocs=world_size, join=True)
