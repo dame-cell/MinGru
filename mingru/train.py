@@ -150,14 +150,14 @@ def main(rank,args):
     train_dataloader = DataLoader(
         dataset=train_data,
         batch_size=args.batch_size // args.world_size,
-        sampler=train_sampler//args.world_size,
+        sampler=train_sampler
         num_workers=2,
         pin_memory=True
     )
     
     test_dataloader = DataLoader(
         dataset=test_data,
-        batch_size=args.batch_size,
+        batch_size=args.batch_size//args.world_size,,
         sampler=test_sampler,
         num_workers=2,
         pin_memory=True
