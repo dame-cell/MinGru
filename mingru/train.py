@@ -1,11 +1,12 @@
+import os
 import torch
+import wandb
 import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
-import os
 from accelerate.utils import tqdm
 from mingru_lm import MinGRU_LM
 from utils import count_parameters, decode_tokens, tokenize_text
@@ -30,17 +31,13 @@ def parse_args():
     return parser.parse_args()
 
  
-def setup_distributed():
-    # Initialize the distributed environment
+def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
-    
-    dist.init_process_group("nccl")
-    local_rank = dist.get_rank()
-    torch.cuda.set_device(local_rank)
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+    torch.cuda.set_device(rank)
 
-
-def cleanup_distributed():
+def cleanup():
     dist.destroy_process_group()
 
 
@@ -49,6 +46,9 @@ def evaluate_model(model, dataloader, device):
     total_loss = 0
     total_tokens = 0
     
+    # Create a progress bar for evaluation
+    progress_bar = tqdm(total=len(dataloader), desc="Evaluating", position=0, leave=True)
+
     with torch.no_grad():
         for input_batch, target_batch in dataloader:
             input_batch = input_batch.to(device)
@@ -62,6 +62,9 @@ def evaluate_model(model, dataloader, device):
             
             total_loss += loss.item() * num_tokens
             total_tokens += num_tokens
+
+            # Update the progress bar
+            progress_bar.update(1)
     
     # Gather metrics from all GPUs
     total_loss = torch.tensor(total_loss).to(device)
@@ -72,6 +75,9 @@ def evaluate_model(model, dataloader, device):
     
     avg_loss = (total_loss / total_tokens).item()
     perplexity = np.exp(avg_loss)
+
+    # Close the progress bar after evaluation
+    progress_bar.close()
     
     return avg_loss, perplexity
 
@@ -112,6 +118,14 @@ def main():
     
     args = parse_args()  # Make sure to parse arguments here
     
+      # Set up device
+    device = torch.device(f"cuda:{rank}")
+
+        # Initialize wandb only for rank 0
+    if rank == 0:
+        wandb.init(project="gpt2-sample-fineweb-ddp", config=args, group=f"DDP_GPT2",)
+
+
     local_rank = dist.get_rank()
     world_size = dist.get_world_size()
     device = torch.device(f"cuda:{local_rank}")
@@ -203,9 +217,16 @@ def main():
                     'lr': f'{scheduler.get_last_lr()[0]:.2e}'
                 })
                 progress_bar.update(1)
-        
-        if local_rank == 0:
-            progress_bar.close()
+            
+            if rank == 0:
+                    wandb.log({
+                        "train_loss": loss.item(),
+                        "learning_rate": optimizer.param_groups[0]['lr'],
+                        "epoch": epoch + 1,
+                        "step": step + 1,
+                    })
+
+   
         
         # Synchronize before evaluation
         dist.barrier()
@@ -243,6 +264,7 @@ def main():
                 )
                 print(f"Prompt: {prompt}\nGenerated: {generated}\n")
 
+    progress_bar.close()
     # Cleanup distributed environment
     cleanup_distributed()
 
