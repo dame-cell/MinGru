@@ -4,6 +4,7 @@ import wandb
 import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader
+from torch.cuda.amp import GradScaler, autocast
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
@@ -23,7 +24,7 @@ def parse_args():
     parser.add_argument('--num_layers', type=int, default=6, help="Number of layers to train the model")
     parser.add_argument('--path_to_train_data', type=str, required=True, help="Path to your saved train processed data")
     parser.add_argument('--path_to_test_data', type=str, required=True, help="Path to your saved test processed data")
-    parser.add_argument('--batch_size', type=int, default=64, help="Batch size for training")
+    parser.add_argument('--batch_size', type=int, default=102, help="Batch size for training")
     parser.add_argument('--lr', type=float, default=4e-3, help="Learning rate for training the model")
     parser.add_argument('--wd', type=float, default=1e-2, help="Weight decay for your optimizer")
     parser.add_argument('--epochs', type=int, default=40, help="Total number of epochs")
@@ -148,9 +149,9 @@ def main(rank,args):
     
     train_dataloader = DataLoader(
         dataset=train_data,
-        batch_size=args.batch_size ,
-        sampler=train_sampler,
-        num_workers=4,
+        batch_size=args.batch_size // args.world_size,
+        sampler=train_sampler//args.world_size,
+        num_workers=2,
         pin_memory=True
     )
     
@@ -158,7 +159,7 @@ def main(rank,args):
         dataset=test_data,
         batch_size=args.batch_size,
         sampler=test_sampler,
-        num_workers=4,
+        num_workers=2,
         pin_memory=True
     )
     
@@ -170,6 +171,7 @@ def main(rank,args):
     num_training_steps = len(train_dataloader) * args.epochs
     num_warmup_steps = int(0.1 * num_training_steps)
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps)
+    scaler = GradScaler()
 
     best_perplexity = float('inf')
     
@@ -203,12 +205,15 @@ def main(rank,args):
             target_batch = target_batch.to(device)
             
             optimizer.zero_grad()
-            loss, logits = model(inputs=input_batch, labels=target_batch)
+            with torch.autocast(device_type="cuda", dtype=torch.float16):
+                loss, logits = model(inputs=input_batch, labels=target_batch)
             
-            loss.backward()
-            optimizer.step()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update() 
             scheduler.step()
             
+
             train_loss += loss.item()
             current_loss = train_loss / (step + 1)
             
