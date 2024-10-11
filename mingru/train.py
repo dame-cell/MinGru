@@ -269,8 +269,8 @@ def main(rank,args):
                     device=device
                 )
                 print(f"Prompt: {prompt}\nGenerated: {generated}\n")
-
-    progress_bar.close()
+    if local_rank == 0:
+        progress_bar.close()
     cleanup()
 
 
