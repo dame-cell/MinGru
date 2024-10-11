@@ -28,14 +28,3 @@ test_data  = MinGruDataset(npz_file_path="test.npz")
 train_dataloader = DataLoader(dataset=train_data,batch_size=4,shuffle=True)
 test_dataloader = DataLoader(dataset=test_data,batch_size=4,shuffle=True)
 
-print("Train Batch:")
-for train_batch,test_batch in train_dataloader:
-    print(train_batch)
-    print(test_batch)
-    break  
-
-print("\nTest Batch:")
-for train_batch,test_batch in test_dataloader:
-    print(train_batch)
-    print(test_batch)
-    break  

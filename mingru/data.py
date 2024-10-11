@@ -3,7 +3,7 @@ import torch
 from tqdm import tqdm
 import argparse
 from datasets import load_dataset
-from utils import decode_tokens 
+from utils import decode_tokens ,tokenize_text
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Processing data for the model")
@@ -11,12 +11,11 @@ def parse_args():
     parser.add_argument('--max_length', type=int, default=512, help="Maximum sequence length for each tokenized input")
     parser.add_argument('--train_path', type=str, default="train.npz", help="Path to save the train processed data")
     parser.add_argument('--test_path', type=str, default="test.npz", help="Path to save the test processed data")
-    parser.add_argument('--train_size', type=int, default=900, help="Number of samples for training")
-    parser.add_argument('--test_size', type=int, default=100, help="Number of samples for testing")
+    parser.add_argument('--train_size', type=int, default=180_000, help="Number of samples for training")
+    parser.add_argument('--test_size', type=int, default=20_000, help="Number of samples for testing")
     return parser.parse_args()
 
-def tokenize_text(text):
-    return [ord(char) for char in text if ord(char) < 256]
+
 
 def tokenize_dataset(dataset):
     tokenized_data = []
@@ -34,8 +33,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     ds = load_dataset(args.data_name, split='train')
-    ds = ds.select(range(args.train_size + args.test_size))  
-    
+    ds = ds.select(range(args.train_size + args.test_size))  # Select total required samples
+
     train_ds = ds.select(range(args.train_size))
     test_ds = ds.select(range(args.train_size, args.train_size + args.test_size))
     

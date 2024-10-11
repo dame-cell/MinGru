@@ -42,7 +42,6 @@ class MinGRU_Layers(nn.Module):
         if is_first_layer:
             x = self.emb(inputs)
         else:
-            # For subsequent layers, use the predicted tokens from previous layer
             x = self.emb(inputs.argmax(dim=-1))
         
         if exists(prev_hiddens):

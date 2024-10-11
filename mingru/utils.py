@@ -3,7 +3,9 @@
 def decode_tokens(tokens):
     return ''.join([chr(token) for token in tokens if token >= 32 and token < 256]) 
 
-
+def tokenize_text(text):
+    return [ord(char) for char in text if ord(char) < 256] 
+    
 def count_parameters(model):
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     formatted_params = f"{total_params:,}"
