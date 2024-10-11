@@ -144,8 +144,8 @@ def main(rank,args):
     train_data = MinGruDataset(args.path_to_train_data)
     test_data = MinGruDataset(args.path_to_test_data)
     
-    train_sampler = DistributedSampler(train_data)
-    test_sampler = DistributedSampler(test_data, shuffle=False)
+    train_sampler = DistributedSampler(train_data, num_replicas=args.world_size, rank=rank)
+    test_sampler = DistributedSampler(test_data, num_replicas=args.world_size, rank=rank)
     
     train_dataloader = DataLoader(
         dataset=train_data,
