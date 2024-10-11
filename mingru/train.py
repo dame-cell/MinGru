@@ -248,8 +248,8 @@ def main(rank,args):
             
         if local_rank == 0:
             wandb.log({
-                        "eval_loss": eval_loss.item(),
-                        "eval_perplexity":eval_perplexity.item()
+                        "eval_loss": eval_loss,
+                        "eval_perplexity":eval_perplexity
                         })
             # Save best model
             if eval_perplexity < best_perplexity:
