@@ -114,7 +114,7 @@ def generate_text(model, start_text="Once upon a time", max_length=100, temperat
 
 def main():
     # Initialize distributed training
-    setup_distributed()
+    setup()
     
     args = parse_args()  # Make sure to parse arguments here
     
