@@ -5,11 +5,16 @@ import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data.distributed import DistributedSampler
+import torch.distributed as dist
+from accelerate.utils import tqdm
+import torch.multiprocessing as mp
 from mingru_lm import MinGRU_LM
 from utils import count_parameters, decode_tokens, tokenize_text
 from pytorch_utils import MinGruDataset
 from transformers import get_linear_schedule_with_warmup
-import argparse
+import argparse 
 
 
 def parse_args():
@@ -23,8 +28,19 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=4e-3, help="Learning rate for training the model")
     parser.add_argument('--wd', type=float, default=1e-2, help="Weight decay for your optimizer")
     parser.add_argument('--epochs', type=int, default=40, help="Total number of epochs")
+    parser.add_argument('--world_size', type=int, default=2, help="Number of GPUs (DDP)")   
 
     return parser.parse_args()
+
+ 
+def setup(rank, world_size):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+    torch.cuda.set_device(rank)
+
+def cleanup():
+    dist.destroy_process_group()
 
 
 def evaluate_model(model, dataloader, device):
@@ -51,8 +67,15 @@ def evaluate_model(model, dataloader, device):
 
             # Update the progress bar
             progress_bar.update(1)
-
-    avg_loss = (total_loss / total_tokens)
+    
+    # Gather metrics from all GPUs
+    total_loss = torch.tensor(total_loss).to(device)
+    total_tokens = torch.tensor(total_tokens).to(device)
+    
+    dist.all_reduce(total_loss, op=dist.ReduceOp.SUM)
+    dist.all_reduce(total_tokens, op=dist.ReduceOp.SUM)
+    
+    avg_loss = (total_loss / total_tokens).item()
     perplexity = np.exp(avg_loss)
 
     # Close the progress bar after evaluation
@@ -63,6 +86,8 @@ def evaluate_model(model, dataloader, device):
 
 def generate_text(model, start_text="Once upon a time", max_length=100, temperature=0.7, device='cuda'):
     model.eval()
+    if isinstance(model, DDP):
+        model = model.module
     
     tokens = tokenize_text(start_text)
     input_tensor = torch.tensor(tokens, dtype=torch.long).unsqueeze(0).to(device)  # Ensure long tensor
@@ -89,41 +114,55 @@ def generate_text(model, start_text="Once upon a time", max_length=100, temperat
     return decode_tokens(generated_tokens)
 
 
-def main(args):
-    # Set up device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def main(rank,args):
+    # Initialize distributed training
+    setup(rank, args.world_size)
+    
 
-    # Initialize wandb
-    wandb.login(key="04098c64a0b88d5f4ff90335b7f75613041420c6")
-    wandb.init(project="mingru-single-gpu", config=args)
+      # Set up device
+    device = torch.device(f"cuda:{rank}")
 
+    if rank == 0:
+        wandb.init(project="mingru-ddp", config=args, group=f"DDP_MINGRU",)
+
+
+    local_rank = dist.get_rank()
+    world_size = dist.get_world_size()
+    device = torch.device(f"cuda:{local_rank}")
+    
     # Create model and move to GPU
     model = MinGRU_LM(dim=args.dim, num_tokens=args.num_tokens, num_layers=args.num_layers)
     model = model.to(device)
+    model = DDP(model, device_ids=[local_rank])
     
-    count_parameters(model)
+    if local_rank == 0:
+        count_parameters(model)
     
-    # Load datasets
+    # Load datasets with distributed sampler
     train_data = MinGruDataset(args.path_to_train_data)
     test_data = MinGruDataset(args.path_to_test_data)
     
+    train_sampler = DistributedSampler(train_data, num_replicas=args.world_size, rank=rank)
+    test_sampler = DistributedSampler(test_data, num_replicas=args.world_size, rank=rank)
+    
     train_dataloader = DataLoader(
         dataset=train_data,
-        batch_size=args.batch_size,
-        shuffle=True,
+        batch_size=args.batch_size // args.world_size,
+        sampler=train_sampler,
         num_workers=2,
         pin_memory=True
     )
     
     test_dataloader = DataLoader(
         dataset=test_data,
-        batch_size=args.batch_size,
-        shuffle=False,
+        batch_size=args.batch_size//args.world_size,
+        sampler=test_sampler,
         num_workers=2,
         pin_memory=True
     )
     
-    print(f"Number of training batches: {len(train_dataloader)}")
+    if local_rank == 0:
+        print(f"Number of training batches: {len(train_dataloader)}")
     
     # Setup optimizer and scheduler
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
@@ -142,17 +181,22 @@ def main(args):
     ]
     
     for epoch in range(args.epochs):
+        # Set epoch for sampler
+        train_sampler.set_epoch(epoch)
+        
         # Training phase
         model.train()
+        model.to(device)
         train_loss = 0.0
         num_batches = len(train_dataloader)
         
-        progress_bar = tqdm(
-            total=num_batches,
-            desc=f"Epoch {epoch + 1}/{args.epochs}",
-            position=0,
-            leave=True
-        )
+        if local_rank == 0:
+            progress_bar = tqdm(
+                total=num_batches,
+                desc=f"Epoch {epoch + 1}/{args.epochs}",
+                position=0,
+                leave=True
+            )
         
         for step, (input_batch, target_batch) in enumerate(train_dataloader):
             input_batch = input_batch.to(device)
@@ -167,62 +211,73 @@ def main(args):
             scaler.update() 
             scheduler.step()
             
+
             train_loss += loss.item()
             current_loss = train_loss / (step + 1)
             
-            progress_bar.set_postfix({
-                'train_loss': f'{current_loss:.4f}',
-                'lr': f'{scheduler.get_last_lr()[0]:.2e}'
-            })
-            progress_bar.update(1)
+            if local_rank == 0:
+                progress_bar.set_postfix({
+                    'train_loss': f'{current_loss:.4f}',
+                    'lr': f'{scheduler.get_last_lr()[0]:.2e}'
+                })
+                progress_bar.update(1)
+            
+            if local_rank == 0:
+                    wandb.log({
+                        "train_loss": loss.item(),
+                        "learning_rate": optimizer.param_groups[0]['lr'],
+                        "epoch": epoch + 1,
+                        "step": step + 1,
+                    })
 
-            wandb.log({
-                "train_loss": loss.item(),
-                "learning_rate": optimizer.param_groups[0]['lr'],
-                "epoch": epoch + 1,
-                "step": step + 1,
-            })
+   
         
-        progress_bar.close()
+        # Synchronize before evaluation
+        dist.barrier()
         
         # Evaluation phase
         eval_loss, eval_perplexity = evaluate_model(model, test_dataloader, device)
         
-        print(f"\nEpoch {epoch + 1}/{args.epochs}")
-        print(f"Training Loss: {current_loss:.4f}")
-        print(f"Evaluation Loss: {eval_loss:.4f}")
-        print(f"Perplexity: {eval_perplexity:.2f}")
-        
-        wandb.log({
-                    "eval_loss": eval_loss,
-                    "eval_perplexity":eval_perplexity
-                    })
-        
-        # Save best model
-        if eval_perplexity < best_perplexity:
-            best_perplexity = eval_perplexity
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'eval_loss': eval_loss,
-                'perplexity': eval_perplexity,
-            }, 'best_model.pt')
-            print(f"New best model saved! Perplexity: {eval_perplexity:.2f}")
-        
-        # Generate text samples
-        print("\nGenerating text samples:")
-        for prompt in test_prompts:
-            generated = generate_text(
-                model,
-                start_text=prompt,
-                max_length=50,
-                temperature=0.7,
-                device=device
-            )
-            print(f"Prompt: {prompt}\nGenerated: {generated}\n")
+        if local_rank == 0:
+            print(f"\nEpoch {epoch + 1}/{args.epochs}")
+            print(f"Training Loss: {current_loss:.4f}")
+            print(f"Evaluation Loss: {eval_loss:.4f}")
+            print(f"Perplexity: {eval_perplexity:.2f}")
+            
+        if local_rank == 0:
+            wandb.log({
+                        "eval_loss": eval_loss,
+                        "eval_perplexity":eval_perplexity
+                        })
+            # Save best model
+            if eval_perplexity < best_perplexity:
+                best_perplexity = eval_perplexity
+                torch.save({
+                    'epoch': epoch,
+                    'model_state_dict': model.module.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'eval_loss': eval_loss,
+                    'perplexity': eval_perplexity,
+                }, 'best_model.pt')
+                print(f"New best model saved! Perplexity: {eval_perplexity:.2f}")
+            
+            # Generate text samples
+            print("\nGenerating text samples:")
+            for prompt in test_prompts:
+                generated = generate_text(
+                    model,
+                    start_text=prompt,
+                    max_length=50,
+                    temperature=0.7,
+                    device=device
+                )
+                print(f"Prompt: {prompt}\nGenerated: {generated}\n")
+    if local_rank == 0:
+        progress_bar.close()
+    cleanup()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args)
+    world_size = args.world_size
+    mp.spawn(main, args=(args,), nprocs=world_size, join=True)
