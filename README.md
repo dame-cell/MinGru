@@ -76,6 +76,9 @@ The train loss seems went down but at the end it start rising at the last steps 
 - The model started overfitting 
 - Maybe I need to add more  regularization 
 
+- The best train loss - 0.8396
+- The best val loss - 0.8358
+- The best preplexity values -  2.32 
 | Training Loss                          | Validation Loss                        | Perplexity                             |
 |:---------------------------------------:|:---------------------------------------:|:---------------------------------------:|
 | <img src="mingru/images/train_loss.png" alt="Training Loss" width="700"/> | <img src="mingru/images/eval_loss.png" alt="Validation Loss" width="700"/> | <img src="mingru/images/preplexity.png" alt="Perplexity" width="700"/> |
