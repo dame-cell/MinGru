@@ -2,12 +2,9 @@
 
 A MinGRU model with 17,323,008 million parameters.
 
-
-| Training Loss                          | Validation Loss                        | Perplexity                             |
-|:---------------------------------------:|:---------------------------------------:|:---------------------------------------:|
-| <img src="mingru/images/train_loss.png" alt="Training Loss" width="600"/> | <img src="mingru/images/eval_loss.png" alt="Validation Loss" width="600"/> | <img src="mingru/images/preplexity.png" alt="Perplexity" width="600"/> |
-
-
+Mingru-lm             |  Mingru
+:-------------------------:|:-------------------------:
+<img src="mingru/images/mingru_lm.png" alt="Image 1" width="400"/> | <img src="mingru/images/mingru.png" alt="Image 1" width="400"/>
 
 The MinGRU model is a simplified version of the traditional Gated Recurrent Unit (GRU), designed to reduce complexity and improve efficiency. By removing the hidden state dependencies from its gates, MinGRU allows for parallel training, which is much faster compared to traditional GRUs. Additionally, it eliminates the use of non-linear activations like tanh, further streamlining computations.
 
@@ -75,9 +72,10 @@ The train loss seems went down but at the end it start rising at the last steps 
 
 - The model started overfitting 
 - Maybe I need to add more  regularization 
+
 | Training Loss                          | Validation Loss                        | Perplexity                             |
-|----------------------------------------|---------------------------------------|----------------------------------------|
-| <p align="center"><img src="mingru/images/train_loss.png" alt="Training Loss" width="500"/></p> | <p align="center"><img src="mingru/images/eval_loss.png" alt="Validation Loss" width="500"/></p> | <p align="center"><img src="mingru/images/preplexity.png" alt="Perplexity" width="500"/></p> |
+|:---------------------------------------:|:---------------------------------------:|:---------------------------------------:|
+| <img src="mingru/images/train_loss.png" alt="Training Loss" width="700"/> | <img src="mingru/images/eval_loss.png" alt="Validation Loss" width="700"/> | <img src="mingru/images/preplexity.png" alt="Perplexity" width="700"/> |
 
 
 # Citations
