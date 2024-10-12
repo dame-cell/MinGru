@@ -38,7 +38,7 @@ The model was trained using two NVIDIA T4 GPUs in a distributed data parallel (D
 | `--batch_size`        | int    | 204           | Batch size for training                           |
 | `--lr`                | float  | 4e-3          | Learning rate for training the model              |
 | `--wd`                | float  | 1e-2          | Weight decay for your optimizer                   |
-| `--epochs`            | int    | 40            | Total number of epochs                            |
+| `--epochs`            | int    | 30            | Total number of epochs                            |
 
 
 # Dataset Information 
