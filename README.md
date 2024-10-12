@@ -76,11 +76,17 @@ The train loss seems went down but at the end it start rising at the last steps 
 - The model started overfitting 
 - Maybe I need to add more  regularization 
 
-![Training Loss](mingru/images/train_loss.png)
+<p align="center">
+  <img src="mingru/images/train_loss.png" alt="Training Loss]" width="500"/>
+</p>
 
-![Validation Loss](mingru/images/eval_loss.png)
+<p align="center">
+  <img src="mingru/images/eval_loss.png" alt="Validation Loss]" width="500"/>
+</p>
 
-![Perplexity](mingru/images/preplexity.png)
+<p align="center">
+  <img src="mingru/images/preplexity.png" alt="Perplexity]" width="500"/>
+</p>
 
 # Citations
 
