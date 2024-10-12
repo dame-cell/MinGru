@@ -3,9 +3,9 @@
 A MinGRU model with 17,323,008 million parameters.
 
 
-Mingru-lm             |  Mingru
-:-------------------------:|:-------------------------:
-<img src="mingru/images/mingru_lm.png" alt="Image 1" width="400"/> | <img src="mingru/images/mingru.png" alt="Image 1" width="400"/>
+| Training Loss                          | Validation Loss                        | Perplexity                             |
+|:---------------------------------------:|:---------------------------------------:|:---------------------------------------:|
+| <img src="mingru/images/train_loss.png" alt="Training Loss" width="600"/> | <img src="mingru/images/eval_loss.png" alt="Validation Loss" width="600"/> | <img src="mingru/images/preplexity.png" alt="Perplexity" width="600"/> |
 
 
 
@@ -75,18 +75,10 @@ The train loss seems went down but at the end it start rising at the last steps 
 
 - The model started overfitting 
 - Maybe I need to add more  regularization 
+| Training Loss                          | Validation Loss                        | Perplexity                             |
+|----------------------------------------|---------------------------------------|----------------------------------------|
+| <p align="center"><img src="mingru/images/train_loss.png" alt="Training Loss" width="500"/></p> | <p align="center"><img src="mingru/images/eval_loss.png" alt="Validation Loss" width="500"/></p> | <p align="center"><img src="mingru/images/preplexity.png" alt="Perplexity" width="500"/></p> |
 
-<p align="center">
-  <img src="mingru/images/train_loss.png" alt="Training Loss]" width="500"/>
-</p>
-
-<p align="center">
-  <img src="mingru/images/eval_loss.png" alt="Validation Loss]" width="500"/>
-</p>
-
-<p align="center">
-  <img src="mingru/images/preplexity.png" alt="Perplexity]" width="500"/>
-</p>
 
 # Citations
 
