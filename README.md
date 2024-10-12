@@ -5,7 +5,7 @@ A MinGRU model with 17,323,008 million parameters.
 
 Mingru-lm             |  Mingru
 :-------------------------:|:-------------------------:
-!<img src="mingru/mingru_lm.png" alt="Image 1" width="400"/> | <img src="mingru/mingru.png" alt="Image 1" width="400"/>
+<img src="mingru/mingru_lm.png" alt="Image 1" width="400"/> | <img src="mingru/mingru.png" alt="Image 1" width="400"/>
 
 
 
