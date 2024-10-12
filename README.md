@@ -2,6 +2,13 @@
 
 A MinGRU model with 17,323,008 million parameters.
 
+
+Mingru-lm             |  Mingru
+:-------------------------:|:-------------------------:
+!<img src="mingru/mingru_lm.png" alt="Image 1" width="400"/> | <img src="mingru/mingru.png" alt="Image 1" width="400"/>
+
+
+
 The MinGRU model is a simplified version of the traditional Gated Recurrent Unit (GRU), designed to reduce complexity and improve efficiency. By removing the hidden state dependencies from its gates, MinGRU allows for parallel training, which is much faster compared to traditional GRUs. Additionally, it eliminates the use of non-linear activations like tanh, further streamlining computations.
 
 | Parameters           | Value | Description                                       |
