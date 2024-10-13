@@ -85,7 +85,7 @@ The train loss seems went down but at the end it start rising at the last steps 
 |:---------------------------------------:|:---------------------------------------:|:---------------------------------------:|
 | <img src="mingru/images/train_loss.png" alt="Training Loss" width="700"/> | <img src="mingru/images/eval_loss.png" alt="Validation Loss" width="700"/> | <img src="mingru/images/preplexity.png" alt="Perplexity" width="700"/> |
 
-Check the wadb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp?nw=nwuserdoss72180)
+Check the wandb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp?nw=nwuserdoss72180)
 
 # Citations
 
