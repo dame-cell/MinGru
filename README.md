@@ -99,4 +99,4 @@ Check the wandb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp?
 ```
 
 # Acknowledgement 
-Thank to [lucidrains](https://github.com/lucidrains/minGRU-pytorch/blob/main/README.md?plain=1) for the reference code 
+Thank to [lucidrains](https://github.com/lucidrains/minGRU-pytorch) for the reference code 
