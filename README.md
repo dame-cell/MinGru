@@ -1,4 +1,4 @@
-see# MinGRU
+# MinGRU
 
 A MinGRU model with 17,323,008 million parameters.
 
