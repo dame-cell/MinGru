@@ -84,10 +84,8 @@ def evaluate_model(model, dataloader, device):
     return avg_loss, perplexity
 
 
-def generate_text(model, start_text="Once upon a time", max_length=100, temperature=0.7, device='cuda'):
+def generate_text(model, start_text="Once upon a time", max_length=200, temperature=0.7, device='cuda'):
     model.eval()
-    if isinstance(model, DDP):
-        model = model.module
     
     tokens = tokenize_text(start_text)
     input_tensor = torch.tensor(tokens, dtype=torch.long).unsqueeze(0).to(device)  # Ensure long tensor
@@ -96,23 +94,26 @@ def generate_text(model, start_text="Once upon a time", max_length=100, temperat
     
     with torch.no_grad():
         for _ in range(max_length):
-            _, logits = model(inputs=input_tensor, labels=None)
+            _,logits = model(input_tensor,labels=None)
+            
             
             last_token_logits = logits[0, -1, :] / temperature
             probs = torch.softmax(last_token_logits, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1).item()
             
-            if next_token < 256:  # Assuming 256 tokens for ASCII
+            # Only append if it's within the 256-character ASCII range
+            if next_token < 256:  
                 generated_tokens.append(next_token)
-                input_tensor = torch.cat([input_tensor, torch.tensor([[next_token]], device=device)], dim=1)  # Append token
-            
-                if next_token == ord('.') and len(generated_tokens) > 30:
-                    break
+                input_tensor = torch.cat([input_tensor, torch.tensor([[next_token]], device=device)], dim=1)
             else:
-                break
-    
-    return decode_tokens(generated_tokens)
+                # Handle tokens outside the ASCII range (optional)
+                continue  # Optionally skip or handle as needed
+        
+            # Optionally stop generation after 30 tokens if a period is predicted, otherwise continue
+            if len(generated_tokens) >= max_length and next_token == ord('.'):
+                #break
 
+    return decode_tokens(generated_tokens)
 
 def main(rank,args):
     # Initialize distributed training
@@ -174,12 +175,7 @@ def main(rank,args):
 
     best_perplexity = float('inf')
     
-    test_prompts = [
-        "Once upon a time",
-        "The little dog",
-        "In the garden",
-        "The magical wizard"
-    ]
+
     
     for epoch in range(args.epochs):
         # Set epoch for sampler
@@ -264,10 +260,8 @@ def main(rank,args):
             
             # Generate text samples
             print("\nGenerating text samples:")
-            for prompt in test_prompts:
-                generated = generate_text(
+            generated = generate_text(
                     model,
-                    start_text=prompt,
                     max_length=50,
                     temperature=0.7,
                     device=device
