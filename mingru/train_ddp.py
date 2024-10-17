@@ -235,7 +235,7 @@ def main(rank,args):
             generated = generate_text(
                     model,
                     max_length=120,
-                    start_text=prompt
+                    start_text=prompt,
                     temperature=0.7,
                     device=device
                 )
