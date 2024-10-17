@@ -134,7 +134,7 @@ def main(rank,args):
     # Create model and move to GPU
     model = MinGRU_LM(dim=args.dim, num_tokens=args.num_tokens, num_layers=args.num_layers)
     model = model.to(device)
-    model = DDP(model, device_ids=[local_rank])
+    model = DDP(model, device_ids=[local_rank],find_unused_parameters=True)
     
     if local_rank == 0:
         count_parameters(model)
