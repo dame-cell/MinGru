@@ -237,7 +237,8 @@ def main(rank,args):
                     temperature=0.7,
                     device=device
                 )
-                print(f"Prompt: {prompt}\nGenerated: {generated}\n")
+            print(f"Prompt: {prompt}\nGenerated: {generated}\n")
+            
     if local_rank == 0:
         progress_bar.close()
     cleanup()
