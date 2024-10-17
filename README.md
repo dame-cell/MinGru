@@ -38,7 +38,7 @@ The model was trained using two NVIDIA T4 GPUs in a distributed data parallel (D
 | `--batch_size`        | int    | 204           | Batch size for training                           |
 | `--lr`                | float  | 4e-3          | Learning rate for training the model              |
 | `--wd`                | float  | 1e-2          | Weight decay for your optimizer                   |
-| `--epochs`            | int    | 40            | Total number of epochs                            |
+| `--epochs`            | int    | 30            | Total number of epochs                            |
 
 
 # Dataset Information 
@@ -76,10 +76,16 @@ The train loss seems went down but at the end it start rising at the last steps 
 - The model started overfitting 
 - Maybe I need to add more  regularization 
 
+- The best train loss - 0.8396
+- The best val loss - 0.8358
+- The best preplexity values -  2.32
+
+  
 | Training Loss                          | Validation Loss                        | Perplexity                             |
 |:---------------------------------------:|:---------------------------------------:|:---------------------------------------:|
 | <img src="mingru/images/train_loss.png" alt="Training Loss" width="700"/> | <img src="mingru/images/eval_loss.png" alt="Validation Loss" width="700"/> | <img src="mingru/images/preplexity.png" alt="Perplexity" width="700"/> |
 
+Check the wandb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp?nw=nwuserdoss72180)
 
 # Citations
 
@@ -93,4 +99,4 @@ The train loss seems went down but at the end it start rising at the last steps 
 ```
 
 # Acknowledgement 
-Thank to [lucidrains](https://github.com/lucidrains/minGRU-pytorch/blob/main/README.md?plain=1) for the reference code 
+Thank to [lucidrains](https://github.com/lucidrains/minGRU-pytorch) for the reference code 
