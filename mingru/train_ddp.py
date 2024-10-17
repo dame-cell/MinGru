@@ -230,10 +230,12 @@ def main(rank,args):
                 print(f"New best model saved! Perplexity: {eval_perplexity:.2f}")
             
             # Generate text samples
+            prompt = "Once upon a time"
             print("\nGenerating text samples:")
             generated = generate_text(
                     model,
                     max_length=120,
+                    start_text=prompt
                     temperature=0.7,
                     device=device
                 )
