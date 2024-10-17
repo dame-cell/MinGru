@@ -181,8 +181,10 @@ def main(args):
         
         # Generate text samples
         print("\nGenerating text samples:")
+        prompt ="Once upon a time"
         generated = generate_text(
                 model,
+                start_text=prompt,
                 max_length=50,
                 temperature=0.7,
                 device=device
