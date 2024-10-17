@@ -134,12 +134,7 @@ def main(args):
 
     best_perplexity = float('inf')
     
-    test_prompts = [
-        "Once upon a time",
-        "The little dog",
-        "In the garden",
-        "The magical wizard"
-    ]
+
     
     for epoch in range(args.epochs):
         # Training phase
@@ -212,10 +207,8 @@ def main(args):
         
         # Generate text samples
         print("\nGenerating text samples:")
-        for prompt in test_prompts:
-            generated = generate_text(
+        generated = generate_text(
                 model,
-                start_text=prompt,
                 max_length=50,
                 temperature=0.7,
                 device=device
