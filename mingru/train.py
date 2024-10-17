@@ -187,7 +187,7 @@ def main(args):
                 temperature=0.7,
                 device=device
             )
-            print(f"Prompt: {prompt}\nGenerated: {generated}\n")
+        print(f"Prompt: {prompt}\nGenerated: {generated}\n")
 
 
 if __name__ == "__main__":
