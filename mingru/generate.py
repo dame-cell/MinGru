@@ -28,7 +28,7 @@ def generate_text(model, start_text="Once upon a time", max_length=200, temperat
         
             # Optionally stop generation after 30 tokens if a period is predicted, otherwise continue
             if len(generated_tokens) >= max_length and next_token == ord('.'):
-                #break
+                break
 
     return decode_tokens(generated_tokens)
 
