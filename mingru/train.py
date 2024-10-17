@@ -3,6 +3,7 @@ import torch
 import wandb
 import torch.nn as nn
 import numpy as np
+from tqdm.auto import tqdm 
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from mingru_lm import MinGRU_LM

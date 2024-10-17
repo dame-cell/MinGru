@@ -123,6 +123,7 @@ def main(rank,args):
     device = torch.device(f"cuda:{rank}")
 
     if rank == 0:
+        wandb.login(key="04098c64a0b88d5f4ff90335b7f75613041420c6")
         wandb.init(project="mingru-ddp", config=args, group=f"DDP_MINGRU",)
 
 

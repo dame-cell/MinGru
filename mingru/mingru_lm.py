@@ -18,6 +18,20 @@ class FeedForward(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+class CausalDepthWiseConv1d(nn.Module):
+    def __init__(self, dim, kernel_size):
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.net = nn.Sequential(
+            nn.Conv1d(dim, dim, kernel_size = kernel_size, groups = dim),
+            nn.Conv1d(dim, dim, kernel_size = 1)
+        )
+    def forward(self, x):
+        x = x.transpose(1, 2) # b n d -> b d n
+        x = F.pad(x, (self.kernel_size - 1, 0), value = 0.)
+        x = self.net(x)
+        return x.transpose(1, 2) # b d n -> b n d
+
 class RMSNorm(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -31,6 +45,7 @@ class MinGRU_Layers(nn.Module):
     def __init__(self, dim, num_tokens):
         super().__init__()
         self.emb = nn.Embedding(num_tokens, dim)
+        self.casual_depth = CausalDepthWiseConv1d(dim=dim,kernel_size=3)
         self.rms_norm = RMSNorm(dim)
         self.gru = MinGRU(dim)
         self.ff = FeedForward(dim)
@@ -102,7 +117,7 @@ if __name__ == "__main__":
 
     model = MinGRU_LM(dim, num_tokens, num_layers)
     count_parameters(model)
-
+    
     batch_inputs = torch.randint(0, 256, (batch_size, seq_length))
     batch_labels = torch.randint(0, 256, (batch_size, seq_length))
 
