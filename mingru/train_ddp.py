@@ -262,7 +262,7 @@ def main(rank,args):
             print("\nGenerating text samples:")
             generated = generate_text(
                     model,
-                    max_length=50,
+                    max_length=120,
                     temperature=0.7,
                     device=device
                 )
