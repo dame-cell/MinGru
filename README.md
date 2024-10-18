@@ -1,12 +1,13 @@
 # MinGRU
 
-A MinGRU model with 17,323,008 million parameters.
+A MinGRU model with 18 million parameter.
 
 Mingru-lm             |  Mingru
 :-------------------------:|:-------------------------:
 <img src="mingru/images/mingru_lm.png" alt="Image 1" width="400"/> | <img src="mingru/images/mingru.png" alt="Image 1" width="400"/>
 
 The MinGRU model is a simplified version of the traditional Gated Recurrent Unit (GRU), designed to reduce complexity and improve efficiency. By removing the hidden state dependencies from its gates, MinGRU allows for parallel training, which is much faster compared to traditional GRUs. Additionally, it eliminates the use of non-linear activations like tanh, further streamlining computations.
+
 
 | Parameters           | Value | Description                                       |
 |----------------------|-------|---------------------------------------------------|
@@ -70,22 +71,17 @@ python train.py --path_to_train_data (required) --path_to_test_data (required) -
 ```
 
 # Plots and observations 
+`We updated the model architecture by adding casual-depth which can be used to capture local temporal dependencies` 
 
-The train loss seems went down but at the end it start rising at the last steps , a few reasons could be: 
-
-- The model started overfitting 
-- Maybe I need to add more  regularization 
-
-- The best train loss - 0.8396
-- The best val loss - 0.8358
-- The best preplexity values -  2.32
+The updated architecture seems to solve the spike at the end of the training 
+- The best train loss - 0.74
+- The best updated val loss - 0.77
+- The best preplexity values -  2.16
 
   
-| Training Loss                          | Validation Loss                        | Perplexity                             |
-|:---------------------------------------:|:---------------------------------------:|:---------------------------------------:|
-| <img src="mingru/images/train_loss.png" alt="Training Loss" width="700"/> | <img src="mingru/images/eval_loss.png" alt="Validation Loss" width="700"/> | <img src="mingru/images/preplexity.png" alt="Perplexity" width="700"/> |
 
-Check the wandb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp?nw=nwuserdoss72180)
+
+Check the wandb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp/runs/6wrgpwt3?nw=nwuserdoss72180)
 
 # Citations
 
