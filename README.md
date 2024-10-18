@@ -77,12 +77,11 @@ python train.py --path_to_train_data (required) --path_to_test_data (required) -
 `We updated the model architecture by adding casual-depth which can be used to capture local temporal dependencies` 
 
 The updated architecture seems to solve the spike at the end of the training 
-- The best train loss - 0.74
-- The best updated val loss - 0.77
-- The best preplexity values -  2.16
-
-  
-
+| Metric                  | Best Value |
+|-------------------------|------------|
+| Best Train Loss          | 0.74       |
+| Best Updated Val Loss    | 0.77       |
+| Best Perplexity          | 2.16       |
 
 Check the wandb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp/runs/6wrgpwt3?nw=nwuserdoss72180)
 
