@@ -34,7 +34,7 @@ And you can find the pre-trained model here:
 [MinGru-model](https://huggingface.co/damerajee/mingru/blob/main/best_model_2.pt)
 # Training Details
 
-The model was trained using two NVIDIA T4 GPUs in a distributed data parallel (DDP) setup, which significantly sped up the training process. We utilized PyTorch’s DistributedDataParallel (DDP) to ensure that the model’s parameters were synchronized across both GPUs during training.
+The model was trained using two NVIDIA T4 GPUs in a distributed data parallel (DDP) setup
 
 | Hyperparameter        | Type   | Default Value | Description                                       |
 |-----------------------|--------|---------------|---------------------------------------------------|
