@@ -79,9 +79,9 @@ python train.py --path_to_train_data (required) --path_to_test_data (required) -
 The updated architecture seems to solve the spike at the end of the training 
 | Metric                  | Best Value |
 |-------------------------|------------|
-| Best Train Loss          | 0.74       |
+| Best Updated Train Loss          | 0.74       |
 | Best Updated Val Loss    | 0.77       |
-| Best Perplexity          | 2.16       |
+| Best Updated Perplexity          | 2.16       |
 
 Check the wandb report right here [wandb](https://wandb.ai/doss72180/mingru-ddp/runs/6wrgpwt3?nw=nwuserdoss72180)
 
