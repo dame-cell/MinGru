@@ -30,6 +30,8 @@ once upon a time, there was a little girl named Lily. She loved to play outside 
 You can try the pre-trained model in this Hugging Face Space app:
 [MinGru](https://huggingface.co/spaces/damerajee/mingru-stories)  
 
+And you can find the pre-trained model here: 
+[MinGru-model](https://huggingface.co/damerajee/mingru/blob/main/best_model_2.pt)
 # Training Details
 
 The model was trained using two NVIDIA T4 GPUs in a distributed data parallel (DDP) setup, which significantly sped up the training process. We utilized PyTorch’s DistributedDataParallel (DDP) to ensure that the model’s parameters were synchronized across both GPUs during training.
@@ -69,6 +71,7 @@ python data.py
 ```bash 
 python train.py --path_to_train_data (required) --path_to_test_data (required) --batch_size 204 
 ```
+
 
 # Plots and observations 
 `We updated the model architecture by adding casual-depth which can be used to capture local temporal dependencies` 
